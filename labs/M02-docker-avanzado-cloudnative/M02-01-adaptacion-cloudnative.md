@@ -15,14 +15,14 @@ Externalizar la configuración de la API demo para que **una sola imagen** funci
 
 ## En qué consiste
 
-Recorrerás el camino de una app «acoplada al lab» a una app **12-factor**: quitar secretos del código, centralizar config en `.env`, y exponer `/ready` para que un orquestador sepa cuándo enviar tráfico.
+Recorrerás el camino de una app «acoplada al lab» a una app **12-factor**: quitar secretos del código, inyectar config vía **variables de entorno** (en el lab usarás un fichero local como simulación) y exponer `/ready` para que cualquier orquestador sepa cuándo enviar tráfico.
 
 ## Mapa del ejercicio
 
 ```text
 Paso 1–2   Revisar y externalizar config en api.py
 Paso 3     Añadir /ready (readiness)
-Paso 4     Conectar infra/.env con Compose
+Paso 4     Conectar variables de entorno (fichero local del lab)
 Paso 5–6   Validar y simular otro entorno
 ```
 
@@ -30,7 +30,7 @@ Paso 5–6   Validar y simular otro entorno
 |--------------|---------------------------|
 | Paso 2 | Por qué `DATABASE_URL` no lleva default en código |
 | Paso 3 | Diferencia entre `/health` y `/ready` |
-| Paso 6 | Por qué cambiar `.env` no exige cambiar `api.py` |
+| Paso 6 | Por qué cambiar variables de entorno no exige cambiar el código |
 
 ---
 
@@ -46,7 +46,7 @@ API_PORT = 8081
 
 **Por qué:** Antes de refactorizar hay que **nombrar el problema**. Cada línea fija un host, un password o un puerto dentro del artefacto que subirías a un registry.
 
-**En profundidad:** Si mañana Postgres pasa de `postgres:5432` (Compose) a `db.prod.internal:5432` (cloud), con config embebida necesitas editar código, commit, build y push. Con config externa solo cambias la variable al desplegar.
+**En profundidad:** Si mañana la base de datos pasa de un host de desarrollo a uno de producción, con config embebida necesitas editar código, commit, build y push. Con config externa solo cambia lo que la **plataforma de despliegue** inyecta — da igual que sea Compose local, Kubernetes, ECS o Azure Container Apps.
 
 **Resultado esperado:** Tienes una lista mental (o en el editor) de al menos tres valores que deben salir del código: URL de DB, URL de Redis y puerto.
 
@@ -71,10 +71,10 @@ LAB_SLOW_SECONDS = float(os.environ.get("LAB_SLOW_SECONDS", "3"))
 - `os.environ["DATABASE_URL"]` **sin default** → si falta la variable, la app falla al arrancar (*fail fast*). Mejor que conectar a una DB equivocada en silencio.
 - `.get(..., default)` en Redis o `PORT` → valores con fallback razonable solo donde el lab lo permite.
 
-**En profundidad:** En M03 mapearás estos nombres a claves de ConfigMap/Secret. Usar los **mismos nombres** aquí y en K8s reduce sorpresas.
+**En profundidad:** Usa **los mismos nombres de variable** en todos los entornos (`DATABASE_URL`, `PORT`, …). Así la imagen no cambia; solo cambia el mecanismo que las rellena (task definition en ECS, variables de app en Azure, manifiestos en Kubernetes, etc.).
 
 > [!TIP]
-> Convención habitual: `PORT` (no `API_PORT`) porque muchas plataformas cloud inyectan `PORT` automáticamente.
+> Convención habitual en cloud: `PORT` (no `API_PORT`) porque muchas plataformas inyectan `PORT` automáticamente (Cloud Run, Heroku-style, varios PaaS).
 
 **Resultado esperado:** Un `grep -n postgres:// infra/app/api/api.py` no muestra credenciales en código (solo comentarios, si acaso).
 
@@ -90,10 +90,12 @@ LAB_SLOW_SECONDS = float(os.environ.get("LAB_SLOW_SECONDS", "3"))
 
 Mantén `/health` simple (solo confirma que el proceso Flask responde).
 
-**Por qué:** Simulas lo que hará Kubernetes en M03:
+**Por qué:** Simulas el contrato que exigen los orquestadores cloud:
 
-- **Liveness probe** → `/health` — «¿ reinicio el contenedor? »
-- **Readiness probe** → `/ready` — «¿ envío tráfico a este Pod? »
+- **Liveness** → `/health` — «¿ reinicio el contenedor? »
+- **Readiness** → `/ready` — «¿ envío tráfico a esta réplica? »
+
+Kubernetes, ECS con health checks y otros balanceadores managed usan esta distinción.
 
 **En profundidad:** Si `/work` se llamara mientras Postgres está caído, verías errores 500 en cascada. `/ready` en 503 evita ese tráfico **antes** de que llegue a la lógica de negocio.
 
@@ -109,26 +111,21 @@ curl -s http://127.0.0.1:8081/ready | jq .
 
 ---
 
-### 4 — Centralizar config en `.env`
+### 4 — Inyectar config en runtime (lab local)
 
-**Acción:**
+**Acción:** En este curso, Docker Compose simula lo que en producción haría la plataforma:
 
 ```bash
 cp infra/.env.example infra/.env
 cat infra/.env
 ```
 
-Verifica en `infra/docker-compose.yml` que `demo-api` incluye:
+Verifica en `infra/docker-compose.yml` que `demo-api` recibe esas variables (p. ej. vía `env_file`).
 
-```yaml
-env_file:
-  - .env
-```
-
-**Por qué:** Compose lee `.env` y lo inyecta en el contenedor. Tú editas un fichero local; el contenedor ve variables de entorno estándar — igual que hará K8s con ConfigMap/Secret.
+**Por qué:** El contenedor **no debe leer ficheros de config propios del orquestador** en el código — solo el entorno del proceso. Compose traduce un fichero local a variables; Kubernetes, ECS o Azure harían lo equivalente con sus APIs.
 
 > [!WARNING]
-> **No hagas commit de `infra/.env`.** Está en `.gitignore`. Solo commitea `.env.example` con valores de laboratorio o placeholders.
+> **`infra/.env` es solo para el laboratorio local** (gitignored). En producción los secretos los gestiona el secret store de tu cloud, no un fichero en el repo.
 
 **Resultado esperado:** Variables `DATABASE_URL`, `REDIS_URL`, `PORT`, `SERVICE_NAME` definidas en `.env` y visibles dentro del contenedor:
 
@@ -171,7 +168,7 @@ docker compose -f infra/docker-compose.yml up -d --force-recreate demo-api
 curl -s http://127.0.0.1:8081/health | jq .service
 ```
 
-**Por qué:** Demuestra la promesa cloudnative: **misma imagen, distinta config**. En producción cambiarías variables o ConfigMap, no el binario.
+**Por qué:** Demuestra la promesa cloudnative: **misma imagen, distinta config inyectada**. En AWS cambiarías la task definition; en Azure las app settings; en Kubernetes los manifiestos — sin tocar el código.
 
 **En profundidad:** Observa que **no** recompilaste lógica Python distinta — solo reinjectaste entorno. Eso es lo que escalará a decenas de réplicas en K8s.
 
@@ -183,11 +180,11 @@ curl -s http://127.0.0.1:8081/health | jq .service
 
 | Concepto | Dónde lo aplicaste |
 |----------|-------------------|
-| Config externa | `os.environ` + `infra/.env` |
+| Config externa | Variables de entorno (`os.environ`) |
 | Fail fast | `DATABASE_URL` obligatorio |
 | Liveness | `/health` |
 | Readiness | `/ready` con Postgres + Redis |
-| Misma imagen, otro entorno | Cambio en `.env` sin editar `api.py` |
+| Imagen portable | Cambio de config sin editar código fuente |
 
 ## Comprueba tu entendimiento
 
@@ -195,7 +192,7 @@ curl -s http://127.0.0.1:8081/health | jq .service
 
 Busca `postgres://` en `api.py`.
 
-→ No debe aparecer en constantes; la URL vive en `.env`.
+→ No debe aparecer en constantes; la conexión se define en variables de entorno.
 
 **Readiness bajo fallo**
 
@@ -229,6 +226,6 @@ curl -s http://127.0.0.1:8081/ready | jq .status   # "ready"
 | `KeyError: DATABASE_URL` | Falta `.env` o `env_file` | `cp infra/.env.example infra/.env` y `./scripts/lab-up.sh` |
 | `/ready` siempre 503 | Postgres/Redis parados o arrancando | `docker compose -f infra/docker-compose.yml ps` |
 | Cambio en `.env` no aplica | Contenedor no recreado | `docker compose ... up -d --force-recreate demo-api` |
-| `/health` OK pero `/work` falla | Readiness no usada por Compose (normal aquí) | En K8s el Service respetará `/ready`; en Compose es educativo |
+| `/health` OK pero `/work` falla | Readiness no usada por Compose (normal aquí) | En despliegues orquestados el balanceador respetará `/ready` |
 
 → Siguiente: **[M02-02 — Optimización de imágenes](M02-02-optimizacion-imagenes.md)**

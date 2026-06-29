@@ -85,7 +85,7 @@ CMD ["python", "api.py"]
 
 **Por qué:** Solo el stage **`runtime`** se publica como imagen final. El `builder` existe durante el build y se descarta — incluyendo basura que no necesitas en ejecución.
 
-**En profundidad — seguridad:** `USER app` (UID 10001) limita daño si alguien explota un bug en tu app: no es root del contenedor ni puede instalar paquetes del sistema fácilmente. En M03 podrás reflejarlo en `securityContext.runAsNonRoot`.
+**En profundidad — seguridad:** `USER app` (UID 10001) limita daño si alguien explota un bug en tu app. Políticas enterprise en Kubernetes, ECS o Azure suelen exigir **run as non-root**; lo defines ya en la imagen.
 
 > [!IMPORTANT]
 > **`Dockerfile.legacy` se conserva solo para comparar.** Compose y el resto del curso usan `Dockerfile` multistage.
@@ -133,7 +133,7 @@ docker compose -f infra/docker-compose.yml exec demo-api id
 docker compose -f infra/docker-compose.yml exec demo-api whoami
 ```
 
-**Por qué:** Kubernetes y políticas enterprise (Pod Security Standards) penalizan contenedores root. Comprobarlo ahora evita sorpresas en M03.
+**Por qué:** Cualquier plataforma que ejecute contenedores (Kubernetes, ECS Fargate, Container Apps, etc.) penaliza o desaconseja procesos root. Comprobarlo en la imagen evita rework al desplegar.
 
 **En profundidad:** Si entraras al contenedor legacy (root), un proceso comprometido podría escribir en más rutas del filesystem del contenedor. Con `app`, la superficie es menor.
 
@@ -192,7 +192,7 @@ Cambio en requirements →  rebuild desde pip install   →  pip CACHE MISS
 | Stages | 1 | 2 (builder + runtime) |
 | Usuario | root | app (10001) |
 | Caché pip | Mezclada con código | Capa independiente |
-| Uso en curso | Solo comparación | Compose + K8s (M03+) |
+| Uso en curso | Solo comparación | Imagen estándar del lab y despliegues posteriores |
 
 ## Comprueba tu entendimiento
 
@@ -239,7 +239,7 @@ Con `python:3.12-slim`, MB suele ser secundario (~5–10 MB). **No-root** y **se
 |---------|----------------|-----------------|
 | `bc: command not found` | Falta `bc` en el Codespace | `sudo apt-get update && sudo apt-get install -y bc` |
 | `ModuleNotFoundError: flask` | Mal copiado `/install` | Revisa `COPY --from=builder /install /usr/local` |
-| Permiso denegado al escribir | Proceso `app` en ruta solo-lectura | No persistas en `/app`; usa volúmenes en K8s (M03) |
+| Permiso denegado al escribir | Proceso `app` en ruta solo-lectura | Usa volúmenes o almacenamiento gestionado en despliegue cloud |
 | Imagen legacy en Compose | `dockerfile` mal indicado | Debe ser `Dockerfile`, no `Dockerfile.legacy` |
 
 → Siguiente módulo: **[M03 — Kubernetes para desarrolladores](../M03-kubernetes-desarrolladores/README.md)**

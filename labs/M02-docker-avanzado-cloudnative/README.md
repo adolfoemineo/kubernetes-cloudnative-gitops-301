@@ -11,7 +11,7 @@ Al terminar este módulo serás capaz de:
 
 - Explicar la diferencia entre **configuración** (cambia según entorno) y **código** (igual en todos los entornos).
 - Transformar una aplicación con parámetros embebidos en una app **cloudnative** usando variables de entorno.
-- Distinguir **liveness** (`/health`) y **readiness** (`/ready`) y por qué Kubernetes necesita ambos.
+- Distinguir **liveness** (`/health`) y **readiness** (`/ready`) y por qué los orquestadores cloud los usan.
 - Leer y escribir un `Dockerfile` **multistage** con usuario no-root y capas optimizadas para caché.
 - Argumentar cuándo una optimización aporta seguridad, tamaño o velocidad de build — no solo MB en disco.
 
@@ -24,51 +24,77 @@ Si la URL de Postgres está hardcodeada, **cada cambio de entorno obliga a recom
 1. **Imagen inmutable** — construyes una vez, despliegas muchas veces.
 2. **Configuración externa** — el mismo artefacto recibe distinta config en runtime.
 
-M02 cierra esa brecha **antes** de entrar en Kubernetes (M03): primero perfeccionas la app y su imagen en Docker; luego la empaquetas y despliegas en K8s.
+M02 cierra esa brecha en la **capa contenedor**: defines una imagen portable y dejas que cada plataforma de despliegue inyecte su configuración. Más adelante verás Kubernetes en profundidad; el diseño que haces aquí sirve igual para **ECS**, **Azure Container Apps**, **Cloud Run** o un **compose local**.
 
 ```mermaid
 flowchart LR
-  subgraph M01["M01 — Entorno"]
-    A[App con config embebida]
+  subgraph build["Build — una vez"]
+    A[Código versionado]
+    B[Imagen OCI]
   end
-  subgraph M02["M02 — Docker avanzado"]
-    B[Config en variables de entorno]
-    C[Imagen multistage segura]
+  subgraph runtime["Runtime — por entorno"]
+    C[Variables de entorno]
+    D[Orquestador / plataforma]
   end
-  subgraph M03["M03 — Kubernetes"]
-    D[Deployment + ConfigMap/Secret]
-  end
-  A --> B --> C --> D
+  A --> B
+  B --> C
+  C --> D
+  D --> E[K8s · ECS · ACA · Lambda* · local]
 ```
+
+*\* Lambda y funciones serverless no siempre usan Docker; cuando sí, la misma regla aplica: config fuera del paquete.*
 
 ## Teoría
 
-### Configuración vs código: la regla de oro
+### Configuración vs código: diseñar para despliegues diversos
 
-| | **Código** | **Configuración** |
-|---|------------|-------------------|
-| **Qué es** | Lógica de negocio, endpoints, algoritmos | URLs, puertos, credenciales, flags |
-| **Dónde vive** | Git (repositorio) | `.env`, ConfigMap, Secret, variables del orquestador |
-| **Cuándo cambia** | Cada release / versión | Cada entorno o despliegue |
-| **En M02 (Docker)** | `api.py` | `infra/.env` + `env_file` en Compose |
-| **En M03 (K8s)** | Imagen del contenedor | ConfigMap + Secret |
+El objetivo no es aprender la sintaxis de un orquestador concreto, sino **separar lo que viaja en la imagen** de **lo que cambia en cada entorno**. Esa separación es lo que hace tu contenedor reutilizable.
+
+| | **Código / artefacto** | **Configuración / entorno** |
+|---|------------------------|----------------------------|
+| **Qué es** | Lógica, binarios, dependencias empaquetadas | URLs, puertos, credenciales, feature flags |
+| **Cuándo cambia** | Con cada release o versión | Con cada entorno (dev, staging, prod) o redeploy |
+| **Dónde se define** | Repositorio de código, pipeline de build | Plataforma de ejecución en runtime |
+
+**Dónde vive en la arquitectura del contenedor**
+
+| Capa | Rol |
+|------|-----|
+| **Imagen (read-only)** | Código, runtime, librerías — **igual en todos los sitios** |
+| **Variables de entorno** | Contrato estándar entre tu app y cualquier plataforma |
+| **Montajes / secretos del orquestador** | Cómo cada cloud entrega esas variables al contenedor |
+
+Tu app **solo debe leer configuración del entorno del proceso** (`os.environ`, equivalentes en otros lenguajes). No le importa si quien la rellenó fue Docker Compose, Kubernetes, ECS task definition, Azure Container Apps settings o un sidecar de secrets manager.
+
+**Cómo inyecta config cada tipo de despliegue** (misma app, distinto mecanismo):
+
+| Entorno | Quién inyecta la config | Tu responsabilidad en la imagen |
+|---------|-------------------------|----------------------------------|
+| **Docker / Compose local** | `environment`, `env_file` | Leer `DATABASE_URL`, `PORT`, etc. del entorno |
+| **Kubernetes** | Manifiestos, ConfigMaps, Secrets, operadores | Mismos nombres de variable; probes en `/health` y `/ready` |
+| **AWS ECS / Fargate** | Task definition, Secrets Manager, SSM | Misma imagen; variables en la definición de tarea |
+| **Azure Container Apps / AKS** | Variables de app, Key Vault references | Misma imagen; secretos referenciados en la plataforma |
+| **AWS Lambda (contenedor)** | Env vars de la función | Imagen delgada + config 100 % externa |
+| **Cloud Run / App Service** | Config de revisión / slot | Puerto vía `$PORT` (convención habitual) |
 
 > [!IMPORTANT]
-> **No confundas «externalizar» con «subir secretos a Git».** El fichero `infra/.env` está en `.gitignore`. En Git solo va `.env.example` (plantilla sin secretos reales). En Kubernetes los passwords irán a **Secret**, no a ConfigMap.
+> **Externalizar no significa commitear secretos.** Los passwords viven en el **sistema de secretos de la plataforma** (vault, secret store, variables cifradas del orquestador). En el lab usarás un fichero local gitignored como **simulación** de lo que en producción gestionaría la plataforma.
+
+**Principio de diseño:** si mañana migras de Kubernetes a ECS, **no recompilas** — cambias quién rellena las variables. Por eso M02 trabaja la imagen y el contrato de env vars antes de profundizar en un orquestador concreto (Kubernetes, en este curso).
 
 ### Los 12 factores relevantes para este módulo
 
 La metodología **12-Factor App** resume buenas prácticas para apps en la nube. De momento te interesan tres:
 
-| Factor | Idea en una frase | Cómo lo aplicamos en M02 |
-|--------|-------------------|---------------------------|
-| **III — Config** | Toda config en el entorno | `os.environ` + `.env` |
-| **IX — Disposability** | Arranque rápido y parada limpia | `/health` y `/ready` |
-| **XII — Logs** | Logs como flujo de eventos | *(M08 — observabilidad)* |
+| Factor | Idea en una frase | Qué haces en la capa contenedor |
+|--------|-------------------|----------------------------------|
+| **III — Config** | Toda config en el entorno | La app lee variables; la imagen no lleva URLs ni passwords |
+| **IX — Disposability** | Arranque rápido y parada limpia | Endpoints `/health` y `/ready` estables |
+| **XII — Logs** | Logs como flujo de eventos | *(observabilidad — módulo posterior del curso)* |
 
-### Health vs Ready: no es lo mismo
+### Health vs Ready: contrato con cualquier orquestador
 
-Kubernetes (y otros orquestadores) preguntan dos cosas distintas al contenedor:
+Plataformas de contenedores (Kubernetes, ECS con health checks, balanceadores managed, etc.) distinguen dos preguntas:
 
 | Probe | Pregunta | Endpoint típico | Si falla… |
 |-------|----------|-----------------|-----------|
@@ -108,13 +134,13 @@ Beneficios habituales:
 
 ### Anti-patrón (M01) vs buena práctica (M02)
 
-| Área | Anti-patrón (M01) | Buena práctica (M02) |
-|------|-------------------|----------------------|
-| Configuración | `DATABASE_URL = "postgres://..."` en código | `os.environ["DATABASE_URL"]` |
-| Secretos | Password en el repo | `.env` local gitignored; Secret en K8s |
-| Salud | Solo un endpoint genérico | `/health` + `/ready` con semántica clara |
-| Imagen | Un stage, proceso root | Multistage, `USER app` (UID 10001) |
-| Despliegue | Rebuild por entorno | Misma imagen, distinta config |
+| Área | Anti-patrón | Buena práctica (contenedor portable) |
+|------|-------------|--------------------------------------|
+| Configuración | URLs y passwords en el código fuente | Lectura desde variables de entorno |
+| Secretos | Credenciales en el repositorio | Secret store / inyección de la plataforma |
+| Salud | Sin endpoints o uno genérico ambiguo | `/health` (liveness) + `/ready` (readiness) |
+| Imagen | Un stage, proceso root | Multistage, usuario no privilegiado |
+| Despliegue | Rebuild por cada entorno | Una imagen, N entornos con distinta config |
 
 ## Demostración guiada
 
@@ -125,7 +151,7 @@ Beneficios habituales:
 3. Se añade o revisa el endpoint `/ready` y, con `curl`, se contrasta respuesta 200 frente a 503 al parar Postgres con Compose.
 4. Se abre `infra/.env.example`, se copia a `.env` y se modifica `SERVICE_NAME`; tras recrear solo `demo-api`, el JSON de `/health` refleja el nuevo nombre **sin** reconstruir la lógica de negocio.
 5. En terminal se ejecuta `./scripts/image-size-compare.sh`: aparecen dos filas (legacy vs multistage). El formador comenta MB, capas y el `uid=10001` dentro del contenedor.
-6. Se cierra enlazando con M03: «Esta misma imagen y estas mismas variables las mapearemos a ConfigMap y Secret en Kubernetes».
+6. Se cierra con la idea portable: «Esta misma imagen y los mismos nombres de variable valen en Compose hoy, en Kubernetes en el curso, o en ECS/ACA mañana — solo cambia quién rellena el entorno».
 
 ## Antes de practicar
 
@@ -141,7 +167,7 @@ Comprueba que tienes:
 
 | Lab | Título | Qué harás | Temario |
 |-----|--------|-----------|---------|
-| M02-01 | [Adaptación cloudnative](M02-01-adaptacion-cloudnative.md) | Externalizar config, `/ready`, `.env` | LAB 1 |
+| M02-01 | [Adaptación cloudnative](M02-01-adaptacion-cloudnative.md) | Externalizar config, `/ready`, variables de entorno | LAB 1 |
 | M02-02 | [Optimización de imágenes](M02-02-optimizacion-imagenes.md) | Multistage, no-root, comparar tamaños | LAB 2 |
 
 → Empieza por **[M02-01 — Adaptación cloudnative](M02-01-adaptacion-cloudnative.md)**.

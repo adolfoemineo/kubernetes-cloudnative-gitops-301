@@ -1,0 +1,13 @@
+{
+  "folders": [
+    {
+      "name": "kubernetes-cloudnative-gitops-301",
+      "path": "/home/david/Cursos/kubernetes-cloudnative-gitops-301"
+    }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/.git": true
+    }
+  }
+}

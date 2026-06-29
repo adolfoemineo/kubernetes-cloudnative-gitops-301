@@ -1,0 +1,45 @@
+---
+description: Contexto del curso Kubernetes CloudNative GitOps 301 — leer antes de editar
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+# Curso Kubernetes + Docker Avanzado (301)
+
+## Workspace correcto
+
+Trabaja en **`kubernetes-cloudnative-gitops-301`**, no en `/home/david/Cursos/template`.
+
+## Memoria de la conversación inicial
+
+Lee **`.agent/HILO-INICIAL.md`** — contiene el temario del cliente (30 h, 17 labs), requisitos Codespaces+kind, mapa módulos, decisiones del bootstrap y backlog.
+
+Luego: `.agent/diseno/contexto.md`, `.agent/diseno/mapa-modulos.md` (bajo `diseno-pedagogico/`), `.agent/SEED.md`.
+
+## Hechos cerrados (no renegociar sin pedir)
+
+- Entrega alumno: fork + **Codespaces** + repo público (sin PDF).
+- Clúster: **kind** desde M01; nombre `cloudnative-lab`.
+- **AKS (M07):** solo demo instructor; alumnos no necesitan Azure.
+- Alumnos **no instalan** Docker/K8s/Helm en local.
+- Diseño docente (horas, ritmo, briefing) solo en `.agent/diseno/` — nunca en `labs/` ni README público.
+
+## Repo
+
+- Local: `/home/david/Cursos/kubernetes-cloudnative-gitops-301`
+- GitHub: `my-it-labs/kubernetes-cloudnative-gitops-301`
+
+## Estado actual (2026-06-29)
+
+- Estructura M01–M08 + stubs labs: **hecho**
+- App demo `infra/app/` + Compose: **hecho**
+- M01-01 / M01-02 guiones completos: **hecho**
+- kind + lab-up validados localmente: **hecho**
+- Guiones M02–M08 detallados: **M02 hecho**; M03–M08 pendiente
+
+## Backlog inmediato
+
+1. App demo en `infra/app/`
+2. M01-01 bootstrap + validación kind en Codespace
+3. Piloto M02–M03

@@ -1,0 +1,13 @@
+{
+  "folders": [
+    {
+      "name": "kubernetes-cloudnative-gitops-301",
+      "path": ".."
+    }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/.git": true
+    }
+  }
+}

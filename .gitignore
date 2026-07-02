@@ -12,3 +12,5 @@ curso.meta.json
 
 # Entorno local
 infra/.env
+environment-example
+node_modules

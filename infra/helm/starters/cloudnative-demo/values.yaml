@@ -1,0 +1,15 @@
+# STARTER M04-01 — parametriza en M04-02
+namespace: cloudnative-lab
+
+api:
+  image: cloudnative-demo-api:local
+  replicas: 2
+
+web:
+  image: cloudnative-demo-web:local
+  nodePort: 30080
+
+config:
+  redisUrl: redis://redis:6379/0
+  serviceName: cloudnative-demo-api
+  databaseUrl: postgres://lab:lab@postgres:5432/lab

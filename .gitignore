@@ -16,5 +16,13 @@ infra/app/api/target/
 infra/app/web/node_modules/
 infra/app/web/dist/
 infra/app/web/.angular/
-# environment-example
-node_modules
+
+# Trabajo del alumno (generado por lab-prepare)
+infra/k8s/base/
+infra/helm/cloudnative-demo/
+infra/kustomize/base/
+infra/kustomize/overlays/
+infra/argocd/application-*.yaml
+infra/observability/active/
+.github/workflows/ci.yml
+.github/workflows/cd.yml

@@ -4,7 +4,7 @@
 
 ## Objetivo
 
-Crear un **chart Helm** para empaquetar la demo Flask + nginx estático y sustituir los YAML sueltos de M03.
+Crear un **chart Helm** para empaquetar la demo Spring Boot + Angular y sustituir los YAML sueltos de M03.
 
 ## Prerrequisitos
 

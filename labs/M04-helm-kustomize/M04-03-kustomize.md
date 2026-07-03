@@ -10,6 +10,12 @@ Organizar manifests con **Kustomize**: base + overlays `dev` y `staging` sin dup
 
 - M04-02 completado.
 
+## Antes de empezar
+
+```bash
+./scripts/lab-prepare.sh m04-03
+```
+
 Referencia: `infra/kustomize/solutions/`.
 
 ---
@@ -65,3 +71,7 @@ diff <(kubectl kustomize infra/kustomize/overlays/dev) \
 ---
 
 → **[M05 — CI/CD](../M05-cicd/README.md)**
+
+```bash
+./scripts/lab-verify.sh m04-03
+```

@@ -6,6 +6,12 @@
 
 Configurar **sync automático** y `selfHeal` para que el clúster refleje Git sin `kubectl apply` manual.
 
+## Antes de empezar
+
+```bash
+./scripts/lab-prepare.sh m06-02
+```
+
 ---
 
 ### 1 — syncPolicy
@@ -39,3 +45,7 @@ Elimina un recurso del overlay en Git y haz push — ArgoCD debe borrarlo del cl
 ---
 
 → **[M06-03 — Promoción entre entornos](M06-03-promocion-entornos.md)**
+
+```bash
+./scripts/lab-verify.sh m06-02
+```

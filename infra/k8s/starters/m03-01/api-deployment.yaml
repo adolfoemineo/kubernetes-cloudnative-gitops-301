@@ -1,0 +1,24 @@
+# STARTER M03-01 — completa spec (réplicas, probes /health y /ready, envFrom)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-api
+  labels:
+    app: demo-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: demo-api
+  template:
+    metadata:
+      labels:
+        app: demo-api
+    spec:
+      containers:
+        - name: api
+          image: cloudnative-demo-api:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8081
+          # TODO: envFrom, livenessProbe (/health), readinessProbe (/ready)

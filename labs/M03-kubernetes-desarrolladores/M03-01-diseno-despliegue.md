@@ -123,10 +123,23 @@ kubectl apply -f infra/k8s/base/ -n cloudnative-lab
 kubectl -n cloudnative-lab get pods -w
 ```
 
-**Resultado esperado:** Pods `demo-api` en `Running` y readiness OK (Postgres lo añades en M03-03; hasta entonces `/ready` puede fallar si falta DB — puedes desplegar postgres de la solución m03-03 temporalmente o aceptar AVISO en readiness).
+**Resultado esperado:** Pods `demo-api` en columna STATUS `Running`. La columna **READY** puede ser `0/1` hasta que despliegues Postgres (siguiente bloque).
 
-> [!TIP]
-> Para este lab, incluye también el `postgres-statefulset.yaml` de `infra/k8s/solutions/m03-03/` si quieres readiness completo, o continúa en M03-03.
+> [!WARNING]
+> **Obligatorio antes de M03-02**
+>
+> El readinessProbe del Deployment llama a `GET /ready`. Ese endpoint de Flask (M02-01) comprueba **Postgres y Redis**. En este lab solo despliegas Redis; el Secret ya apunta a `postgres:5432`, pero el servicio Postgres **aún no existe**.
+>
+> Consecuencia: verás `Running` y **`0/1 Ready`** → en M03-02 el comando `kubectl rollout status` **se quedará esperando indefinidamente**.
+>
+> **Antes de pasar a M03-02**, despliega Postgres:
+>
+> ```bash
+> kubectl apply -f infra/k8s/solutions/m03-03/postgres-statefulset.yaml -n cloudnative-lab
+> kubectl -n cloudnative-lab wait --for=condition=ready pod -l app=postgres --timeout=120s
+> kubectl -n cloudnative-lab rollout restart deployment/demo-api
+> kubectl -n cloudnative-lab get pods -l app=demo-api   # debe mostrar 2/2 READY en el Deployment
+> ```
 
 ---
 
@@ -147,7 +160,7 @@ curl -s http://127.0.0.1:8081/work | jq .
 
 **¿Qué probe usa Flask para Kubernetes?**
 
-→ Liveness/readiness en `/health/*` tras M02-01.
+→ Liveness en `/health` y readiness en `/ready` (M02-01).
 
 ## Errores frecuentes
 
@@ -155,6 +168,7 @@ curl -s http://127.0.0.1:8081/work | jq .
 |---------|-------|---------|
 | `ImagePullBackOff` | Imagen no cargada en kind | `kind load docker-image ...` |
 | CrashLoop `KeyError` JDBC | Falta Secret | Revisa `envFrom` y secret |
-| Readiness 503 | Postgres ausente | M03-03 o postgres temporal |
+| Readiness 503 / `0/1 Ready` | Postgres no desplegado; `/ready` exige DB | Aplica `infra/k8s/solutions/m03-03/postgres-statefulset.yaml` antes de M03-02 |
+| `rollout status` colgado | Pods nunca Ready (misma causa) | Postgres + `rollout restart`; ver M03-02 |
 
 → **[M03-02 — Estrategias de despliegue](M03-02-estrategias-despliegue.md)**

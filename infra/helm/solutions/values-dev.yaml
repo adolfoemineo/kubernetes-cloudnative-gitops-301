@@ -1,0 +1,5 @@
+# M04-02 — entorno desarrollo
+api:
+  replicas: 1
+config:
+  serviceName: cloudnative-demo-api-dev

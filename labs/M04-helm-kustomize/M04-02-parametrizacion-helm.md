@@ -6,11 +6,13 @@
 
 Parametrizar réplicas, nombres de servicio y recursos con `values.yaml` y overrides por línea de comandos.
 
-## Prerrequisitos
+## Antes de empezar
 
-- M04-01 completado (chart instalado).
+```bash
+./scripts/lab-prepare.sh m04-02
+```
 
----
+Copia referencia: `cp infra/helm/solutions/values-dev.yaml infra/helm/cloudnative-demo/` y adapta.
 
 ### 1 — values por entorno
 
@@ -74,3 +76,7 @@ Template con `{{ .Values.api.resources }}` en el contenedor.
 ---
 
 → **[M04-03 — Kustomize](M04-03-kustomize.md)**
+
+```bash
+./scripts/lab-verify.sh m04-02
+```

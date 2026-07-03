@@ -1,0 +1,5 @@
+# STARTER — implementa Deployment + Service API Flask (ver solución en infra/helm/solutions/)
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.namespace }}

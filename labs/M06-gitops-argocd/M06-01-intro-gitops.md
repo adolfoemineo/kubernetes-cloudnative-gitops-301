@@ -11,6 +11,12 @@ Instalar **ArgoCD** en kind y desplegar la demo desde un `Application` que apunt
 - M05 completado.
 - Overlay Kustomize en `infra/kustomize/overlays/dev`.
 
+## Antes de empezar
+
+```bash
+./scripts/lab-prepare.sh m06-01
+```
+
 ---
 
 ### 1 — Instalar ArgoCD
@@ -52,3 +58,7 @@ Cambia réplicas en Git → push → observa sync en UI ArgoCD.
 ---
 
 → **[M06-02 — Sincronización automática](M06-02-sincronizacion-automatica.md)**
+
+```bash
+./scripts/lab-verify.sh m06-01
+```

@@ -1,0 +1,12 @@
+# STARTER M03-03 — completa StatefulSet + PVC + headless Service
+# Referencia: infra/k8s/solutions/m03-03/postgres-statefulset.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-secret
+type: Opaque
+stringData:
+  password: lab
+---
+# TODO: StatefulSet postgres con volumeClaimTemplates
+# TODO: Service headless (clusterIP: None)

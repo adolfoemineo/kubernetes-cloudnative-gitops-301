@@ -19,7 +19,9 @@ En los laboratorios desplegarás la **API Flask** y la **web nginx** en kind, ap
 | Script | Módulo |
 |--------|--------|
 | `./scripts/k8s-apply.sh` | Build + kind load + apply `infra/k8s/base/` |
-| `./scripts/lab-prepare.sh m03-01` | Post-M02 + carpeta K8s vacía |
+| `./scripts/lab-prepare.sh m03-01` | Post-M02 + manifiestos starter en `infra/k8s/base/` |
+| `./scripts/lab-prepare.sh m03-02` | Solución M03-01 + **despliega Postgres antes** (ver M03-02) |
+| `./scripts/lab-verify.sh m03-01` … `m03-03` | Autocorrección |
 
 ## Ahora practica tú
 

@@ -4,7 +4,7 @@
 
 ## Objetivo
 
-Automatizar **build** de imágenes Docker (Flask + nginx estático) y **push** a GHCR con GitHub Actions.
+Automatizar **build** de imágenes Docker (Spring Boot + Angular) y **push** a GHCR con GitHub Actions.
 
 ## Prerrequisitos
 
@@ -15,7 +15,11 @@ Referencia: `.github/workflows/solutions/ci.yml`.
 
 ## Antes de empezar
 
-El repo **no** incluye el workflow activo — lo crearás tú en `.github/workflows/ci.yml`.
+```bash
+./scripts/lab-prepare.sh m05-01
+```
+
+El repo **no** incluye el workflow activo — lo crearás en `.github/workflows/ci.yml` (referencia: `.github/workflows/solutions/ci.yml`).
 
 ---
 
@@ -50,7 +54,7 @@ cp .github/workflows/solutions/ci.yml .github/workflows/ci.yml
 
 ```bash
 git add .github/workflows/ci.yml
-git commit -m "Add CI pipeline for Flask and nginx estático images"
+git commit -m "Add CI pipeline for Spring Boot and Angular images"
 git push
 ```
 
@@ -65,3 +69,7 @@ Descarga o inspecciona el digest publicado; en el lab local sigues usando `:loca
 ---
 
 → **[M05-02 — Pipeline CD](M05-02-pipeline-cd.md)**
+
+```bash
+./scripts/lab-verify.sh m05-01
+```

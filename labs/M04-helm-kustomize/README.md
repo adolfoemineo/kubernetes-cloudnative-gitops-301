@@ -10,7 +10,7 @@
 
 ## Teoría
 
-**Helm** empaqueta aplicaciones Kubernetes como charts versionados. **Kustomize** patcha manifests sin templates, ideal para overlays por entorno.
+**Helm** empaqueta aplicaciones Kubernetes como charts versionados. Tras cambiar templates o values hay que ejecutar **`helm upgrade`** para que el clúster refleje el cambio (a diferencia de editar y olvidar). **Kustomize** patcha manifests sin templates, ideal para overlays por entorno.
 
 ## Ahora practica tú
 

@@ -4,7 +4,7 @@
 
 ## Objetivo
 
-Desplegar **PostgreSQL** con StatefulSet + PVC y conectar la API Flask (`spring.datasource`).
+Desplegar **PostgreSQL** con StatefulSet + PVC y conectar la API Spring Boot (`spring.datasource`).
 
 ## Prerrequisitos
 
@@ -12,7 +12,11 @@ Desplegar **PostgreSQL** con StatefulSet + PVC y conectar la API Flask (`spring.
 
 ## Antes de empezar
 
-Referencia: `infra/k8s/solutions/m03-03/postgres-statefulset.yaml`.
+```bash
+./scripts/lab-prepare.sh m03-03
+```
+
+Referencia solución: `infra/k8s/solutions/m03-03/postgres-statefulset.yaml`.
 
 ## Mapa del ejercicio
 
@@ -72,7 +76,7 @@ kubectl -n cloudnative-lab exec -it postgres-0 -- psql -U lab -d lab -c "SELECT 
 ```bash
 kubectl -n cloudnative-lab rollout restart deployment/demo-api
 kubectl -n cloudnative-lab port-forward svc/demo-api 8081:8081 &
-curl -s http://127.0.0.1:8081/ready | jq .
+curl -s http://127.0.0.1:8081/actuator/health/readiness | jq .
 curl -s http://127.0.0.1:8081/work | jq .
 ```
 
@@ -87,3 +91,7 @@ curl -s http://127.0.0.1:8081/work | jq .
 → StatefulSet: identidad estable, PVC por réplica, headless DNS.
 
 → **[M04 — Helm y Kustomize](../M04-helm-kustomize/README.md)**
+
+```bash
+./scripts/lab-verify.sh m03-03
+```

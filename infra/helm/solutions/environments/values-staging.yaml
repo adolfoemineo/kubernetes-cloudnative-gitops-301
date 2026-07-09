@@ -1,0 +1,5 @@
+# M04-02 — override staging (fuera del chart)
+api:
+  replicas: 2
+config:
+  serviceName: cloudnative-demo-api-staging

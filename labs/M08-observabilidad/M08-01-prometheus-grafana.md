@@ -4,11 +4,11 @@
 
 ## Objetivo
 
-Monitorizar la **API Flask** (logs + disponibilidad `/health`) con Prometheus y Grafana en kind.
+Monitorizar la **API Spring Boot** (Micrometer/Prometheus) con Prometheus y dashboards Grafana en kind.
 
 ## Prerrequisitos
 
-- App desplegada con endpoint `/health` (solución M02-01).
+- App desplegada con endpoint `/actuator/prometheus` (solución M02-01).
 - M06 completado o stack demo en `cloudnative-lab`.
 
 ## Antes de empezar
@@ -33,7 +33,7 @@ Implementa manifests en `infra/observability/` basándote en `infra/observabilit
 
 ```bash
 kubectl -n cloudnative-lab port-forward svc/demo-api 8081:8081 &
-curl -s http://127.0.0.1:8081/health | head -20
+curl -s http://127.0.0.1:8081/actuator/prometheus | head -20
 ```
 
 Prometheus UI (NodePort 30090 o port-forward):
@@ -42,7 +42,7 @@ Prometheus UI (NodePort 30090 o port-forward):
 kubectl -n observability port-forward svc/prometheus 9090:9090
 ```
 
-Busca targets `demo-api-flask` UP. En Flask el lab usa `/health` como señal básica; opcionalmente añade `prometheus_client` en M08 para métricas richer.
+Busca métricas `jvm_`, `http_server_requests_*`.
 
 ---
 
@@ -58,8 +58,12 @@ Login `admin` / `lab`. Añade datasource Prometheus `http://prometheus:9090`.
 
 ### 4 — Dashboard
 
-Importa un dashboard de disponibilidad HTTP o crea panel con `up{job="demo-api-flask"}`.
+Importa un dashboard JVM (ID comunitario) o crea panel con `rate(http_server_requests_seconds_count[5m])`.
 
 ---
 
 → **[M08-02 — Logging](M08-02-logging-elk.md)**
+
+```bash
+./scripts/lab-verify.sh m08-01
+```

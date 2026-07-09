@@ -1,0 +1,24 @@
+# STARTER M04-01 — completa templates en infra/helm/cloudnative-demo/
+# Namespace: solo con helm install -n cloudnative-lab (no pongas namespace: en values)
+
+api:
+  image: cloudnative-demo-api:local
+  replicas: 2
+  servicePort: 8081
+
+web:
+  image: cloudnative-demo-web:local
+  replicas: 1
+  servicePort: 8080
+  nodePort: 30080
+
+config:
+  redisUrl: redis://redis:6379/0
+  serviceName: cloudnative-demo-api
+  databaseUrl: postgres://lab:lab@postgres:5432/lab
+
+redis:
+  enabled: true
+
+postgres:
+  enabled: false

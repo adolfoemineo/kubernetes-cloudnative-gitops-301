@@ -6,6 +6,12 @@
 
 Modelar **dev → staging** con dos Applications ArgoCD y namespaces distintos.
 
+## Antes de empezar
+
+```bash
+./scripts/lab-prepare.sh m06-03
+```
+
 ---
 
 ### 1 — Overlay staging
@@ -40,3 +46,7 @@ source:
 ---
 
 → **[M07 — AKS (referencia)](../M07-kubernetes-azure-aks/README.md)**
+
+```bash
+./scripts/lab-verify.sh m06-03
+```

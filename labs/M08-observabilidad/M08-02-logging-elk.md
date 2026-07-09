@@ -4,17 +4,25 @@
 
 ## Objetivo
 
-Centralizar logs de Pods Flask y nginx estático con un stack **ligero** (Elasticsearch + Kibana o alternativa compatible con el RAM del Codespace).
+Centralizar logs de Pods Spring Boot y Angular con un stack **ligero** (Elasticsearch + Kibana o alternativa compatible con el RAM del Codespace).
 
 ## Prerrequisitos
 
 - M08-01 completado.
 
+## Antes de empezar
+
+```bash
+./scripts/lab-prepare.sh m08-02
+```
+
+Implementa manifests en `infra/observability/active/` (referencia: `infra/observability/solutions/elasticsearch-kibana.yaml`).
+
 ---
 
-### 1 — Logs en Flask
+### 1 — Logs en Spring Boot
 
-Flask escribe a **stdout** por defecto (factor XI 12-factor). Comprueba:
+Spring Boot escribe a **stdout** por defecto (factor XI 12-factor). Comprueba:
 
 ```bash
 kubectl -n cloudnative-lab logs deployment/demo-api --tail=20
@@ -44,3 +52,7 @@ Abre un incidente en M08-03 y localiza la misma ventana temporal en logs y métr
 ---
 
 → **[M08-03 — Diagnóstico](M08-03-diagnostico-incidencias.md)**
+
+```bash
+./scripts/lab-verify.sh m08-02
+```

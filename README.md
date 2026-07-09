@@ -2,9 +2,7 @@
 
 [Siguiente página →](labs/M01-entorno-codespace-kind/README.md)
 
-Formación **100 % práctica** con **Python (Flask)** y **nginx**: adaptas una aplicación al modelo cloudnative, la despliegas en **Kubernetes** (clúster **kind** en Codespaces), automatizas con **CI/CD** y **GitOps**, y la monitorizas con **Prometheus**, **Grafana** y **ELK**.
-
-> **Ramas del repo:** `main` = stack **Python/Flask** · `springboot` = stack **Spring Boot + Angular** (mismos labs, distinta implementación).
+Formación **100 % práctica** sobre **Spring Boot** y **Angular**: adaptas una aplicación al modelo cloudnative, la despliegas en **Kubernetes** (clúster **kind** en Codespaces), automatizas con **CI/CD** y **GitOps**, y la monitorizas con **Prometheus**, **Grafana** y **ELK**.
 
 ## Cómo funciona el curso
 
@@ -14,7 +12,7 @@ Formación **100 % práctica** con **Python (Flask)** y **nginx**: adaptas una a
 
 Cada módulo tiene **teoría** en su README y **laboratorios** (`Mxx-NN`) donde practicas tú.
 
-> El código de la app demo **evoluciona contigo**: en `main` arranca en estado M01 y tú implementas los cambios de cada lab. Ver [docs/progresion-labs.md](docs/progresion-labs.md).
+> El código de la app demo **evoluciona contigo**: en `main` arranca en estado M01 y tú implementas los cambios de cada lab. Ver [docs/progresion-labs.md](docs/progresion-labs.md) y el [mapa starters/solutions](docs/map-labs-starters-solutions.md).
 
 ## Antes de empezar
 

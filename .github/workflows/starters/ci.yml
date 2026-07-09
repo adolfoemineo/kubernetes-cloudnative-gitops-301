@@ -1,0 +1,14 @@
+# STARTER M05-01 — completa owner/repo y publica en .github/workflows/ci.yml
+name: CI — Flask + nginx
+
+on:
+  push:
+    branches: [main]
+    paths: ['infra/app/**']
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # TODO: login GHCR, build-push infra/app/api y infra/app/web

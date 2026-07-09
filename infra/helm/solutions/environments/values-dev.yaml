@@ -1,0 +1,5 @@
+# M04-02 — override desarrollo (fuera del chart)
+api:
+  replicas: 1
+config:
+  serviceName: cloudnative-demo-api-dev

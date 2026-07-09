@@ -6,6 +6,13 @@
 
 Diagnosticar fallos **inducidos** en la API Flask correlacionando métricas, logs y estado Kubernetes.
 
+## Antes de empezar
+
+```bash
+./scripts/lab-prepare.sh m08-03
+./scripts/obs-up.sh
+```
+
 ---
 
 ### Escenario A — Postgres caído
@@ -57,3 +64,7 @@ Tabla breve:
 ---
 
 → **[Índice del curso](../../README.md)**
+
+```bash
+./scripts/lab-verify.sh m08-03
+```

@@ -83,16 +83,16 @@ DATABASE_URL: postgres://lab:lab@postgres:5432/lab
 
 **Acción:** `api-deployment.yaml` con:
 
-| Campo | Valor |
-|-------|-------|
-| `image` | `cloudnative-demo-api:local` |
-| `imagePullPolicy` | `IfNotPresent` |
-| `replicas` | `2` |
-| `livenessProbe` | `GET /health:8081` |
-| `readinessProbe` | `GET /ready:8081` |
-| `envFrom` | configMapRef + secretRef |
+| Campo | Valor | Qué comprueba |
+|-------|-------|---------------|
+| `image` | `cloudnative-demo-api:local` | Imagen local en kind |
+| `imagePullPolicy` | `IfNotPresent` | No pull si ya está cargada |
+| `replicas` | `2` | Dos Pods |
+| `livenessProbe` | `GET /health:8081` | ¿Proceso vivo? (no mira Postgres) |
+| `readinessProbe` | `GET /ready:8081` | ¿Listo para tráfico? (Postgres + Redis) |
+| `envFrom` | configMapRef + secretRef | Variables de entorno |
 
-**Por qué:** Los probes de /health y /ready son el contrato estándar en Flask — igual que usarías en AKS o EKS.
+**Por qué importa para el rollout:** Kubernetes **solo marca el Pod Ready** si `readinessProbe` recibe **200**. Un rolling update **no termina** mientras los Pods nuevos no pasen esa sonda. Si `/ready` devuelve 503, verás `rollout status` atascado (lo practicas en M03-02).
 
 Crea `api-service.yaml` (ClusterIP, puerto 8081).
 
@@ -123,10 +123,23 @@ kubectl apply -f infra/k8s/base/ -n cloudnative-lab
 kubectl -n cloudnative-lab get pods -w
 ```
 
-**Resultado esperado:** Pods `demo-api` en `Running` y readiness OK (Postgres lo añades en M03-03; hasta entonces `/ready` puede fallar si falta DB — puedes desplegar postgres de la solución m03-03 temporalmente o aceptar AVISO en readiness).
+**Resultado esperado:** Pods `demo-api` en columna STATUS `Running`. La columna **READY** puede ser `0/1` hasta que despliegues Postgres (siguiente bloque).
 
-> [!TIP]
-> Para este lab, incluye también el `postgres-statefulset.yaml` de `infra/k8s/solutions/m03-03/` si quieres readiness completo, o continúa en M03-03.
+> [!WARNING]
+> **Obligatorio antes de M03-02**
+>
+> El readinessProbe del Deployment llama a `GET /ready`. Ese endpoint de Flask (M02-01) comprueba **Postgres y Redis**. En este lab solo despliegas Redis; el Secret ya apunta a `postgres:5432`, pero el servicio Postgres **aún no existe**.
+>
+> Consecuencia: verás `Running` y **`0/1 Ready`** → en M03-02 el comando `kubectl rollout status` **se quedará esperando indefinidamente**.
+>
+> **Antes de pasar a M03-02**, despliega Postgres:
+>
+> ```bash
+> kubectl apply -f infra/k8s/solutions/m03-03/postgres-statefulset.yaml -n cloudnative-lab
+> kubectl -n cloudnative-lab wait --for=condition=ready pod -l app=postgres --timeout=120s
+> kubectl -n cloudnative-lab rollout restart deployment/demo-api
+> kubectl -n cloudnative-lab get pods -l app=demo-api   # debe mostrar 2/2 READY en el Deployment
+> ```
 
 ---
 
@@ -145,9 +158,9 @@ curl -s http://127.0.0.1:8081/work | jq .
 
 → Rotación y permisos distintos; los secretos no van en texto plano en Git en producción.
 
-**¿Qué probe usa Flask para Kubernetes?**
+**¿Por qué se queda atascado `kubectl rollout status`?**
 
-→ Liveness/readiness en `/health/*` tras M02-01.
+→ Porque la **readinessProbe** (`GET /ready`) no recibe HTTP 200. Sin Postgres, `/ready` devuelve 503, el Pod no pasa a Ready y el rolling update no avanza.
 
 ## Errores frecuentes
 
@@ -155,6 +168,7 @@ curl -s http://127.0.0.1:8081/work | jq .
 |---------|-------|---------|
 | `ImagePullBackOff` | Imagen no cargada en kind | `kind load docker-image ...` |
 | CrashLoop `KeyError` JDBC | Falta Secret | Revisa `envFrom` y secret |
-| Readiness 503 | Postgres ausente | M03-03 o postgres temporal |
+| Readiness 503 / `0/1 Ready` | Postgres no desplegado; `/ready` exige DB | Aplica `infra/k8s/solutions/m03-03/postgres-statefulset.yaml` antes de M03-02 |
+| `rollout status` colgado | Pods nunca Ready (misma causa) | Postgres + `rollout restart`; ver M03-02 |
 
 → **[M03-02 — Estrategias de despliegue](M03-02-estrategias-despliegue.md)**

@@ -10,6 +10,12 @@ Encadenar CI → CD: tras el build, desplegar el chart Helm con la imagen versio
 
 - M05-01 (CI publicando en GHCR).
 
+## Antes de empezar
+
+```bash
+./scripts/lab-prepare.sh m05-02
+```
+
 Referencia: `.github/workflows/solutions/cd.yml`.
 
 ---
@@ -61,3 +67,7 @@ kubectl -n cloudnative-lab get pods -o jsonpath='{.items[*].spec.containers[*].i
 ---
 
 → **[M06 — GitOps](../M06-gitops-argocd/README.md)**
+
+```bash
+./scripts/lab-verify.sh m05-02
+```

@@ -1,0 +1,9 @@
+# STARTER M03-01 — completa las claves (sin secretos)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: demo-api-config
+data:
+  REDIS_URL: redis://redis:6379/0
+  SERVICE_NAME: cloudnative-demo-api
+  PORT: "8081"

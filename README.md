@@ -1,4 +1,4 @@
-# Kubernetes + Docker Avanzado — CloudNative, GitOps y Observabilidad
+# Kubernetes + Docker Avanzado — CloudNative, GitOps y Observabilidad.
 
 [Siguiente página →](labs/M01-entorno-codespace-kind/README.md)
 
